@@ -1,4 +1,5 @@
 use crate::vehicle::*;
+
 #[derive(PartialEq, Clone, Debug)]
 
 pub struct Roads {
@@ -17,6 +18,7 @@ impl Roads {
             Right: Vec::new(),
         }
     }
+
     /// Push a vehicle into the appropriate direction queue
     pub fn push(&mut self, v: Vehicle) {
         match v.direction.as_str() {
@@ -63,3 +65,4 @@ impl Roads {
         (dir.to_string(), *len as i32)
     }
 }
+

@@ -24,11 +24,11 @@ fn main() {
     let mut traffic_system = TrafficSystem::new();
     let mut vehicles: Vec<Vehicle> = Vec::new();
 
-    // Traffic light positions
-    let light_down = Rect::new(375, 275, 50, 50); // Down
-    let light_rigth = Rect::new(575, 275, 50, 50); // Rigth
-    let light_left = Rect::new(375, 475, 50, 50); // left
-    let light_up = Rect::new(575, 475, 50, 50); // Up
+   // Traffic light positions
+    let light_ne = Rect::new(375, 275, 50, 50); // Down
+    let light_nw = Rect::new(575, 275, 50, 50); // Rigth
+    let light_se = Rect::new(375, 475, 50, 50); // left
+    let light_sw = Rect::new(575, 475, 50, 50); // Up
 
     let mut Roads = Roads::Roads::new();
 
@@ -115,17 +115,20 @@ fn main() {
                 _ => {}
             }
         }
+        // Update traffic light system
+        traffic_system.update(&vehicles, &Roads);
 
-        let (up_color, down_color, left_color, right_color) = traffic_system.get_light_colors();
+         let (up_color, down_color, left_color, right_color) = traffic_system.get_light_colors();
+
         // Draw traffic lights
         canvas.set_draw_color(up_color);
-        canvas.fill_rect(light_up).unwrap();
+        canvas.fill_rect(light_ne).unwrap();
         canvas.set_draw_color(down_color);
-        canvas.fill_rect(light_down).unwrap();
+        canvas.fill_rect(light_sw).unwrap();
         canvas.set_draw_color(right_color);
-        canvas.fill_rect(light_rigth).unwrap();
+        canvas.fill_rect(light_se).unwrap();
         canvas.set_draw_color(left_color);
-        canvas.fill_rect(light_left).unwrap();
+        canvas.fill_rect(light_nw).unwrap();
         // Draw roads
         canvas.set_draw_color(Color::WHITE);
         // North-South road (vertical)
@@ -146,7 +149,7 @@ fn main() {
 
         // Update vehicles with traffic light awareness (using indices to avoid borrowing conflicts)
         for i in 0..vehicles.len() {
-            // let can_proceed = traffic_system.can_vehicle_proceed(&vehicles[i], &traffic_system);
+            let can_proceed = traffic_system.can_vehicle_proceed(&vehicles[i], &traffic_system);
             let has_vehicle_ahead = {
                 let current_vehicle = &vehicles[i];
                 vehicles.iter().enumerate().any(|(j, other)| {
@@ -182,16 +185,17 @@ fn main() {
             };
 
             // Only update if vehicle can proceed and no vehicle ahead
-            if !has_vehicle_ahead {
+            if can_proceed && !has_vehicle_ahead {
                 vehicles[i].update();
             }
         }
 
         for vec in &vehicles {
-            if vec.is_off_screen() {
+            if vec.clone().is_off_screen() {
                 Roads.pop(&vec);
             }
         }
+        vehicles.retain(|vehicle| !vehicle.is_off_screen());
 
         for vehicle in &vehicles {
             vehicle.draw(&mut canvas);
