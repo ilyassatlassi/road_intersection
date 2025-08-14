@@ -173,39 +173,6 @@ async fn main() {
             v.draw();
         }
 
-        // HUD text (simple one-line)
-        let hud = format!(
-            "UP {}/{}  DOWN {}/{}  LEFT {}/{}  RIGHT {}/{}",
-            roads.count_cars("up"),
-            10,
-            roads.count_cars("down"),
-            10,
-            roads.count_cars("left"),
-            10,
-            roads.count_cars("right"),
-            10
-        );
-        draw_text(&hud, 16.0, 22.0, 22.0, WHITE);
-
-        // show queues
-        let queues = format!(
-            "Queues: up={} down={} left={} right={}",
-            roads.count_waiting("up"),
-            roads.count_waiting("down"),
-            roads.count_waiting("left"),
-            roads.count_waiting("right"),
-        );
-        draw_text(&queues, 16.0, 44.0, 18.0, YELLOW);
-
-        // Controls
-        draw_text(
-            "Controls: ↑ spawn south, ↓ spawn north, ← spawn east, → spawn west, R random, Esc quit",
-            16.0,
-            66.0,
-            14.0,
-            GRAY,
-        );
-
         next_frame().await
     }
 }

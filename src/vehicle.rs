@@ -84,6 +84,11 @@ impl Vehicle {
                 if self.direction == "up" {
                     if self.car.y <= 340.0 {
                         self.car.x -= self.speed;
+                        if self.car.x <= 425.0 { // finished turn
+                            self.direction = "up".to_string();
+                            self.car.x -= self.speed;
+                             // update direction
+                        }
                     } else {
                         self.car.y -= self.speed;
                     }
@@ -96,6 +101,9 @@ impl Vehicle {
                 } else if self.direction == "left" {
                     if self.car.x >= 440.0 {
                         self.car.x -= self.speed;
+                        if self.car.x <= 475.0 { // finished turn
+                            self.direction = "left".to_string(); // update direction
+                        }
                     } else {
                         self.car.y += self.speed;
                     }
@@ -113,6 +121,7 @@ impl Vehicle {
         // If this vehicle had a turning route and has now passed the intersection,
         // we consider the turn finished: update its lane (`direction`) and mark the route done.
         if self.random_route != "GoStraight" && self.has_passed_intersection() {
+            println!("sssssssssssssssssssssssssssssssssssssssssssss");
             let new_dir = match (self.direction.as_str(), self.random_route.as_str()) {
                 ("up", "TurnLeft") => "left",
                 ("up", "TurnRight") => "right",
