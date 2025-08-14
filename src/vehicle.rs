@@ -1,14 +1,13 @@
-use rand::Rng;
-use sdl2::pixels::Color;
-use sdl2::rect::Rect;
+use macroquad::prelude::*;
+use ::rand::Rng;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Vehicle {
-    pub car: Rect,
+    pub car: Rect, // x, y, w, h (f32)
     pub direction: String,
     pub random_route: String,
     pub color: Color,
-    pub speed: i32,
+    pub speed: f32,
 }
 
 impl Vehicle {
@@ -18,86 +17,88 @@ impl Vehicle {
             direction,
             random_route,
             color,
-            speed: 1,
+            speed: 1.0,
         }
     }
 
-    pub fn draw(&self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
-        canvas.set_draw_color(self.color);
-        canvas.fill_rect(self.car).unwrap();
+    pub fn draw(&self) {
+        draw_rectangle(self.car.x, self.car.y, self.car.w, self.car.h, self.color);
     }
 
     pub fn update(&mut self) {
+        // simple speed logic
+        if self.is_in_intersection() {
+            self.speed = (self.speed + 0.5).min(3.0);
+        } else if self.is_approaching_intersection() {
+            self.speed = 3.0;
+        } else {
+            self.speed = 1.0;
+        }
+
         match self.random_route.as_str() {
             "GoStraight" => {
-                if self.direction.as_str() == "up" {
+                if self.direction == "up" {
                     self.car.y -= self.speed;
-                } else if self.direction.as_str() == "down" {
+                } else if self.direction == "down" {
                     self.car.y += self.speed;
-                } else if self.direction.as_str() == "left" {
+                } else if self.direction == "left" {
                     self.car.x -= self.speed;
-                } else if self.direction.as_str() == "right" {
+                } else if self.direction == "right" {
                     self.car.x += self.speed;
-                } else {
-                    todo!();
                 }
             }
             "TurnRight" => {
-                if self.direction.as_str() == "up" {
-                    if self.car.y <= 415 {
+                if self.direction == "up" {
+                    if self.car.y <= 415.0 {
                         self.car.x += self.speed;
                     } else {
                         self.car.y -= self.speed;
                     }
-                } else if self.direction.as_str() == "down" {
-                    if self.car.y >= 340 {
+                } else if self.direction == "down" {
+                    if self.car.y >= 340.0 {
                         self.car.x -= self.speed;
                     } else {
                         self.car.y += self.speed;
                     }
-                } else if self.direction.as_str() == "left" {
-                    if self.car.x >= 515 {
+                } else if self.direction == "left" {
+                    if self.car.x >= 515.0 {
                         self.car.x -= self.speed;
                     } else {
                         self.car.y -= self.speed;
                     }
-                } else if self.direction.as_str() == "right" {
-                    if self.car.x <= 435 {
+                } else if self.direction == "right" {
+                    if self.car.x <= 435.0 {
                         self.car.x += self.speed;
                     } else {
                         self.car.y += self.speed;
                     }
-                } else {
-                    todo!();
                 }
             }
             "TurnLeft" => {
-                if self.direction.as_str() == "up" {
-                    if self.car.y <= 340 {
+                if self.direction == "up" {
+                    if self.car.y <= 340.0 {
                         self.car.x -= self.speed;
                     } else {
                         self.car.y -= self.speed;
                     }
-                } else if self.direction.as_str() == "down" {
-                    if self.car.y >= 410 {
+                } else if self.direction == "down" {
+                    if self.car.y >= 410.0 {
                         self.car.x += self.speed;
                     } else {
                         self.car.y += self.speed;
                     }
-                } else if self.direction.as_str() == "left" {
-                    if self.car.x >= 440 {
+                } else if self.direction == "left" {
+                    if self.car.x >= 440.0 {
                         self.car.x -= self.speed;
                     } else {
                         self.car.y += self.speed;
                     }
-                } else if self.direction.as_str() == "right" {
-                    if self.car.x <= 510 {
+                } else if self.direction == "right" {
+                    if self.car.x <= 510.0 {
                         self.car.x += self.speed;
                     } else {
                         self.car.y -= self.speed;
                     }
-                } else {
-                    todo!();
                 }
             }
             _ => {}
@@ -105,32 +106,31 @@ impl Vehicle {
     }
 
     pub fn is_off_screen(&self) -> bool {
-        self.car.x < -75 || self.car.x > 1075 || self.car.y < -75 || self.car.y > 875
+        self.car.x < -75.0 || self.car.x > 1000.0 || self.car.y < -75.0 || self.car.y > 800.0
     }
+
     pub fn is_approaching_intersection(&self) -> bool {
         match self.direction.as_str() {
-            "up" => self.car.y <= 525 && self.car.y >= 475,
-            "down" => self.car.y >= 275 && self.car.y + 50 <= 325,
-            "right" => self.car.x + 50 <= 425 && self.car.x >= 375,
-            "left" => self.car.x >= 575 && self.car.x <= 625,
+            "up" => (self.car.y <= 475.0) && (self.car.y >= 425.0),
+            "down" => (self.car.y >= 275.0) && (self.car.y <= 325.0),
+            "right" => (self.car.x <= 425.0) && (self.car.x >= 375.0),
+            "left" => (self.car.x >= 525.0) && (self.car.x <= 575.0),
             _ => false,
         }
     }
 
     pub fn is_in_intersection(&self) -> bool {
-        // Car rectangle edges
+        // intersection rect [425,325] - [575,475]
         let car_left = self.car.x;
-        let car_right = self.car.x + 50 as i32;
+        let car_right = self.car.x + self.car.w;
         let car_top = self.car.y;
-        let car_bottom = self.car.y + 50 as i32;
+        let car_bottom = self.car.y + self.car.h;
 
-        // Intersection rectangle edges
-        let inter_left = 425;
-        let inter_right = 575;
-        let inter_top = 325;
-        let inter_bottom = 475;
+        let inter_left = 425.0;
+        let inter_right = 575.0;
+        let inter_top = 325.0;
+        let inter_bottom = 475.0;
 
-        // Check if the car rectangle intersects the intersection rectangle
         car_left < inter_right
             && car_right > inter_left
             && car_top < inter_bottom
@@ -138,61 +138,56 @@ impl Vehicle {
     }
 }
 
-pub fn create_car(x: i32, y: i32, direction: &str) -> Vehicle {
+pub fn create_car(x: f32, y: f32, direction: &str) -> Vehicle {
     let routes = ["TurnLeft", "TurnRight", "GoStraight"];
-    let mut rng = rand::rng();
-    let index = rng.random_range(0..3);
-    let random_route = routes[index].to_owned();
+    let mut rng = ::rand::thread_rng();
+    let index = rng.gen_range(0..routes.len());
+    let random_route = routes[index].to_string();
 
     let color = match random_route.as_str() {
-        "TurnLeft" => Color::YELLOW,
-        "TurnRight" => Color::BLUE,
-        "GoStraight" => Color::GREY,
-        _ => Color::WHITE,
+        "TurnLeft" => YELLOW,
+        "TurnRight" => BLUE,
+        "GoStraight" => GRAY,
+        _ => WHITE,
     };
-    let car_rect = Rect::new(x, y, 50, 50);
+
+    let car_rect = Rect::new(x, y, 50.0, 50.0);
     Vehicle::new(car_rect, direction.to_owned(), random_route, color)
 }
 
-pub fn can_create_car(
-    vehicles: &Vec<Vehicle>,
-    spawn_x: i32,
-    spawn_y: i32,
-    direction: &str,
-) -> bool {
-    let safe_distance = 100;
-
+pub fn can_create_car(vehicles: &Vec<Vehicle>, spawn_x: f32, spawn_y: f32, direction: &str) -> bool {
+    let safe_distance = 100.0;
     for vehicle in vehicles {
         let distance = match direction {
             "up" => {
-                if vehicle.direction == "up" && (vehicle.car.x - spawn_x).abs() < 30 {
+                if vehicle.direction == "up" && (vehicle.car.x - spawn_x).abs() < 30.0 {
                     (spawn_y - vehicle.car.y).abs()
                 } else {
-                    safe_distance + 1 // Not same lane
+                    safe_distance + 1.0
                 }
             }
             "down" => {
-                if vehicle.direction == "down" && (vehicle.car.x - spawn_x).abs() < 30 {
+                if vehicle.direction == "down" && (vehicle.car.x - spawn_x).abs() < 30.0 {
                     (vehicle.car.y - spawn_y).abs()
                 } else {
-                    safe_distance + 1
+                    safe_distance + 1.0
                 }
             }
             "left" => {
-                if vehicle.direction == "left" && (vehicle.car.y - spawn_y).abs() < 30 {
+                if vehicle.direction == "left" && (vehicle.car.y - spawn_y).abs() < 30.0 {
                     (spawn_x - vehicle.car.x).abs()
                 } else {
-                    safe_distance + 1
+                    safe_distance + 1.0
                 }
             }
             "right" => {
-                if vehicle.direction == "right" && (vehicle.car.y - spawn_y).abs() < 30 {
+                if vehicle.direction == "right" && (vehicle.car.y - spawn_y).abs() < 30.0 {
                     (vehicle.car.x - spawn_x).abs()
                 } else {
-                    safe_distance + 1
+                    safe_distance + 1.0
                 }
             }
-            _ => safe_distance + 1,
+            _ => safe_distance + 1.0,
         };
 
         if distance < safe_distance {
