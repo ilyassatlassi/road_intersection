@@ -28,7 +28,7 @@ impl TrafficSystem {
         TrafficSystem {
             phase: Direction::Up,
             timer: 0,
-            phase_duration: 240, // ~4s @ 60 FPS
+            phase_duration: 180, // ~4s @ 60 FPS
             is_timeover: false,
             starve_up: 0,
             starve_down: 0,
@@ -37,7 +37,7 @@ impl TrafficSystem {
             pending_full_lanes: Vec::new(),
         }
     }
-
+    
     // Called every frame
     pub fn update(&mut self, vehicles: &Vec<Vehicle>, roads: &Roads) {
         self.timer = self.timer.saturating_add(1);
@@ -72,14 +72,17 @@ impl TrafficSystem {
 
         let should_extend = self.should_extend_phase(vehicles);
         if self.timer >= self.phase_duration {
+            println!("essxt");
             self.is_timeover = true;
         }
 
         if self.timer >= self.phase_duration && !should_extend {
-            self.next_phase(roads);
+            println!("ext");
             self.timer = 0;
             self.is_timeover = false;
+            self.next_phase(roads);
         }
+        
     }
 
     pub fn should_extend_phase(&self, vehicles: &Vec<Vehicle>) -> bool {
@@ -96,7 +99,7 @@ impl TrafficSystem {
 
     pub fn next_phase(&mut self, roads: &Roads) {
         // Priority 1: serve heavily loaded lanes
-        let full_lanes = roads.full_lanes(7);
+        let full_lanes = roads.full_lanes(5);
         if !full_lanes.is_empty() {
             if self.pending_full_lanes.is_empty() {
                 self.pending_full_lanes = full_lanes.clone();
@@ -115,7 +118,9 @@ impl TrafficSystem {
             .max(self.starve_down)
             .max(self.starve_left)
             .max(self.starve_right);
+        // println!("{}, up: {}, down: {}, left: {}, rigth: {}",max_starve, self.starve_up, self.starve_down, self.starve_left, self.starve_right);
         if max_starve > 60 * 10 {
+            // println!("yepp{}, up: {}, down: {}, left: {}, rigth: {}",max_starve, self.starve_up, self.starve_down, self.starve_left, self.starve_right);
             self.phase = if self.starve_up == max_starve {
                 Direction::Up
             } else if self.starve_down == max_starve {
@@ -139,16 +144,13 @@ impl TrafficSystem {
 
     // Decide whether a single vehicle may proceed (approaching = close to intersection)
     pub fn can_vehicle_proceed(&self, vehicle: &Vehicle) -> bool {
-        if vehicle.is_in_intersection() {
-            return true;
-        }
-        if !vehicle.is_approaching_intersection() {
+        if vehicle.is_in_intersection()  || !vehicle.is_approaching_intersection() || vehicle.has_passed_intersection() {
             return true;
         }
 
-        // if vehicle.is_approaching_intersection() && self.timer > self.phase_duration {
-        //     return false;
-        // }
+        if !vehicle.is_in_intersection() && self.timer > self.phase_duration {
+            return false;
+        }
 
         let allowed_direction = match self.phase {
             Direction::Up => "up",

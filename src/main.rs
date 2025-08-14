@@ -3,10 +3,10 @@ mod ligths;
 mod roads;
 mod vehicle;
 use ::rand::Rng;
-
 use ligths::{TrafficSystem};
 use roads::Roads;
 use vehicle::{create_car, can_create_car, Vehicle};
+
 fn window_conf() -> Conf {
     Conf {
         window_title: "Road Intersection".to_owned(),
@@ -18,6 +18,7 @@ fn window_conf() -> Conf {
         ..Default::default()
     }
 }
+
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut traffic_system = TrafficSystem::new();
@@ -41,7 +42,7 @@ async fn main() {
 
         if is_key_pressed(KeyCode::Up) {
             let spawn_x = 515.0;
-            let spawn_y = 700.0;
+            let spawn_y = 800.0;
             if can_create_car(&vehicles, spawn_x, spawn_y, "up") {
                 let new_car = create_car(spawn_x, spawn_y, "up");
                 vehicles.push(new_car);
@@ -77,7 +78,7 @@ async fn main() {
             let direction = directions[rng.gen_range(0..directions.len())];
 
             let (spawn_x, spawn_y) = match direction {
-                "up" => (515.0, 750.0),
+                "up" => (515.0, 800.0),
                 "down" => (440.0, -50.0),
                 "left" => (1000.0, 335.0),
                 "right" => (-50.0, 415.0),
